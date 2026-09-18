@@ -2,16 +2,23 @@
 
 A Stage Manager-style window switcher for the [Omarchy](https://omarchy.org/) shell.
 
-![Stage Drawer](preview.png)
+![Stage Drawer — push the pointer to the left edge and a drawer slides in with a preview of every open window](preview.png)
 
-Push the pointer against the left edge of the screen and a drawer slides in with
-a preview of every other open window — across all workspaces, including windows
-hidden by `show-desktop`. Click one to switch to it and make it full width (or
-fullscreen, if that's how you were already working). A **Back to tiles** button
-restores the normal tiled layout.
+## What it does
 
-It works over full-width and fullscreen windows, so you can get back out of a
-maximized app without reaching for a keybinding.
+Push the pointer against the **left edge of the screen**. A drawer slides in
+showing a preview of every open window. Click one to switch to it.
+
+That's the whole idea. In detail:
+
+- **It shows every window**, across all workspaces — including ones hidden by
+  `show-desktop`, which are otherwise hard to get back to.
+- **Clicking a window switches to it and makes it full width.** If you were
+  already in fullscreen, it opens fullscreen instead, so your mode is preserved.
+- **A "Back to tiles" button** returns everything on the workspace to the normal
+  tiled layout.
+- **It works on top of full-width and fullscreen windows**, so you can get out of
+  a maximized app without reaching for a keybinding.
 
 ## Install
 
@@ -19,13 +26,16 @@ maximized app without reaching for a keybinding.
 omarchy plugin add https://github.com/sumanthmukkala/omarchy-stage-drawer --enable
 ```
 
-To update later:
+That is all — no config file to edit, no keybinding to set. Move the pointer to
+the left edge and it works.
+
+**Update:**
 
 ```bash
 omarchy plugin update io.github.sumanthmukkala.stage-drawer
 ```
 
-To remove:
+**Uninstall:**
 
 ```bash
 omarchy plugin remove io.github.sumanthmukkala.stage-drawer
@@ -33,52 +43,57 @@ omarchy plugin remove io.github.sumanthmukkala.stage-drawer
 
 ## Requirements
 
-- Omarchy with `omarchy-shell` (Quickshell)
-- Hyprland
-- `jq` and `hyprctl` (both standard on Omarchy)
+| | |
+| --- | --- |
+| Omarchy | 4.x (Quattro), with `omarchy-shell` |
+| Compositor | Hyprland |
+| Commands | `hyprctl`, `jq` — both ship with Omarchy |
 
-## Built to stay cheap
+No other dependencies. Nothing is downloaded at runtime.
 
-It was written for an older Intel MacBook Air, so it avoids the things that make
-this kind of overlay expensive:
+## Settings
 
-- The trigger is an **event-driven hover strip**, not a timer polling the cursor.
-- Window previews are a **single captured frame** taken when the drawer opens
-  (`live: false`), not live-updating thumbnails.
-- Previews are **destroyed when the drawer closes**, so nothing is retained while
-  the drawer is idle.
+There is no config file. To change how it feels, edit the constants at the top of
+`Drawer.qml`:
 
-It also leaves an 80px gap at the bottom of the edge strip so it doesn't fight a
-bottom-left hot corner, if you use one.
+| Property | Default | What it controls |
+| --- | --- | --- |
+| `drawerWidth` | `240` | Width of the drawer, in pixels |
+| `edgeWidth` | `2` | How many pixels of screen edge trigger it |
+| `edgeBottomGap` | `80` | Dead zone at the bottom, so it doesn't fight a hot corner |
+| `openDelayMs` | `120` | How long you must hover before it opens |
+| `closeDelayMs` | `300` | Grace period before it closes again |
+
+Changes apply the moment you save. No restart.
+
+## Performance
+
+Written for an older Intel MacBook Air, so it avoids the expensive parts of this
+kind of overlay:
+
+- The edge trigger is **event-driven**, not a timer polling the cursor position.
+- Each preview is **one still frame**, captured when the drawer opens, rather
+  than a live-updating thumbnail.
+- Previews are **destroyed when the drawer closes**, so nothing is held in memory
+  while it sits idle.
 
 ## Theming
 
-The drawer draws from `qs.Commons` (`Color.menu`, `Style.cornerRadius`,
-`Style.font`, …), so it follows whatever Omarchy theme is active. There is
-nothing to configure.
-
-## Tuning
-
-The constants at the top of `Drawer.qml` are the knobs worth touching:
-
-| Property | Default | What it does |
-| --- | --- | --- |
-| `drawerWidth` | `240` | Width of the drawer panel |
-| `edgeWidth` | `2` | How many pixels of screen edge arm the trigger |
-| `edgeBottomGap` | `80` | Dead zone at the bottom, to spare a hot corner |
-| `openDelayMs` | `120` | Hover time before it slides in |
-| `closeDelayMs` | `300` | Grace period before it slides out |
-
-Edits apply on save — the plugin is not `keepLoaded`, so no shell restart needed.
+It reads `Color` and `Style` from `qs.Commons`, so it follows whatever Omarchy
+theme is active. Nothing to configure.
 
 ## How it works
 
-Two pieces:
+Two files:
 
-- **`Drawer.qml`** — the UI. The edge strip, the slide animation, the previews.
-- **`stage-switch`** — a small bash helper the QML shells out to. Hyprland window
-  manipulation goes through `hyprctl`, so focus changes, fullscreen state, and
-  pulling windows back off special workspaces happen here.
+- **`Drawer.qml`** — the interface: the edge trigger, the slide animation, and
+  the window previews.
+- **`stage-switch`** — a small bash helper. Hyprland window management happens
+  through `hyprctl`, so focus changes, fullscreen state, and recovering windows
+  from special workspaces are done here.
+
+The plugin writes no configuration files. It only queries and dispatches through
+`hyprctl`, which changes live window state, not anything on disk.
 
 ## License
 
