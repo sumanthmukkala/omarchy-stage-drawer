@@ -1,0 +1,44 @@
+#!/bin/bash
+# Helper for the Stage Drawer shell plugin.
+#   stage-switch window <address>   switch to a window and make it full width
+#                                   (or fullscreen, if you were already fullscreen)
+#   stage-switch tiles              put every window on this workspace back into tiles
+
+dsp() { hyprctl dispatch "$1" >/dev/null; }
+
+case $1 in
+window)
+  addr=$2
+  [[ $addr == 0x* ]] || addr="0x$addr"
+
+  active=$(hyprctl activewindow -j)
+  # Hyprland fullscreen state: 0 = tiled, 1 = maximized (full width), 2 = fullscreen.
+  mode="maximized"
+  [[ $(jq -r '.fullscreen // 0' <<< "$active") == 2 ]] && mode="fullscreen"
+
+  target_ws=$(hyprctl clients -j | jq -r --arg a "$addr" '.[] | select(.address == $a) | .workspace.name')
+  [[ -n $target_ws ]] || exit 0
+
+  # Bring back windows parked on a special workspace (e.g. by show-desktop).
+  if [[ $target_ws == special:* ]]; then
+    current=$(hyprctl activeworkspace -j | jq -r '.id')
+    dsp "hl.dsp.window.move({ workspace = \"$current\", follow = true, window = \"address:$addr\" })"
+  fi
+
+  dsp "hl.dsp.focus({ window = \"address:$addr\" })"
+  dsp "hl.dsp.window.fullscreen({ mode = \"$mode\", action = \"set\", window = \"address:$addr\" })"
+  ;;
+
+tiles)
+  ws=$(hyprctl activeworkspace -j | jq -r '.id')
+  for addr in $(hyprctl clients -j | jq -r --argjson ws "$ws" '.[] | select(.workspace.id == $ws and .fullscreen != 0) | .address'); do
+    dsp "hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"unset\", window = \"address:$addr\" })"
+    dsp "hl.dsp.window.fullscreen({ mode = \"fullscreen\", action = \"unset\", window = \"address:$addr\" })"
+  done
+  ;;
+
+*)
+  echo "usage: stage-switch window <address> | tiles" >&2
+  exit 1
+  ;;
+esac

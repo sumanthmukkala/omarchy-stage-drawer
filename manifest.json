@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "com.sumanthmukkala.stage-drawer",
+  "name": "Stage Drawer",
+  "version": "1.0.0",
+  "author": "Sumanth Mukkala",
+  "description": "Stage Manager-style drawer: push the pointer to the left edge to see and switch between open windows.",
+  "kinds": [
+    "service"
+  ],
+  "entryPoints": {
+    "service": "Drawer.qml"
+  }
+}
