@@ -2,6 +2,8 @@
 
 A Stage Manager-style window switcher for the [Omarchy](https://omarchy.org/) shell.
 
+![Stage Drawer](preview.png)
+
 Push the pointer against the left edge of the screen and a drawer slides in with
 a preview of every other open window — across all workspaces, including windows
 hidden by `show-desktop`. Click one to switch to it and make it full width (or
