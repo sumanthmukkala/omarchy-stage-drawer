@@ -20,13 +20,13 @@ omarchy plugin add https://github.com/sumanthmukkala/omarchy-stage-drawer --enab
 To update later:
 
 ```bash
-omarchy plugin update com.sumanthmukkala.stage-drawer
+omarchy plugin update io.github.sumanthmukkala.stage-drawer
 ```
 
 To remove:
 
 ```bash
-omarchy plugin remove com.sumanthmukkala.stage-drawer
+omarchy plugin remove io.github.sumanthmukkala.stage-drawer
 ```
 
 ## Requirements
